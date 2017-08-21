@@ -13,8 +13,9 @@ param(
     # absolute or relative path to directory containing cef binaries archives (used if DownloadBinary = local)
     [string] $CefBinaryDir = "../cefsource/chromium/src/cef/binary_distrib/",
 
+    [ValidatePattern("\d{1}.\d{3}.\d{4}.\w{8}")]
     [Parameter(Position = 3)]
-    $CefVersion = "3.3071.1634.g9cc59c8"
+    $CefVersion = "3.3112.1656.g9ec3e42"
 )
 
 $WorkingDir = split-path -parent $MyInvocation.MyCommand.Definition
@@ -388,6 +389,12 @@ function DownloadCefBinaryAndUnzip()
   $CefWin32CefVersion = $CefBuildsJson.windows32.versions | Where-Object {$_.cef_version -eq $CefVersion}
   $CefWin64CefVersion = $CefBuildsJson.windows64.versions | Where-Object {$_.cef_version -eq $CefVersion}
 
+  # Make sure there is a version for the specified build
+  if([string]::IsNullOrEmpty($CefWin32CefVersion.cef_version))
+  {
+    Die 'Win32 version is empty.  Could not find matching build build.  Check target CEF version'
+  }
+
   $Cef32FileName = ($CefWin32CefVersion.files | Where-Object {$_.type -eq "standard"}).name
   $Cef64FileName = ($CefWin64CefVersion.files | Where-Object {$_.type -eq "standard"}).name
 
@@ -564,7 +571,7 @@ switch -Exact ($Target) {
     "nupkg" {
         #VSX v110
 		VSX v120
-        VSX v140
+        #VSX v140
         Nupkg
     }
     "nupkg-only" {
